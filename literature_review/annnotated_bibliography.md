@@ -22,4 +22,12 @@
 -   The algorithms and optimizations are quite interesting in this.
 -   Their method for getting a spectrogram is also very cool
 -   they compare models to prove that their proposed model is better.
--   Dataset!
+-   Dataset:
+    -   [RAVDESS](https://zenodo.org/records/1188976#.XsAXemgzaUk)
+    -   [TESS](https://www.kaggle.com/datasets/ejlok1/toronto-emotional-speech-set-tess)
+    -   [SAVEE](https://www.kaggle.com/datasets/ejlok1/surrey-audiovisual-expressed-emotion-savee)
+
+## My own Dataset Collection
+
+-   [Movie Trailer Audio](https://www.kaggle.com/datasets/watipaso/trailermelspec)
+-   [Horror Movie Scenes](https://www.kaggle.com/datasets/kindngng/horrormovie11)
