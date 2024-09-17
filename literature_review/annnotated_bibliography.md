@@ -11,6 +11,7 @@
 -   they carry out multiple experiments
 -   architecture is of interest in this paper
 -   Dataset is also quite interesting
+-   The paper notes that reducing the sampling rate from the original 44.1 kHz to 16 kHz did not adversely affect the results while significantly improving processing time
 
 ## [3. PANNs](PANNs_Large-Scale_Pretrained_Audio_Neural_Networks.pdf)
 
