@@ -2,4 +2,4 @@
 
 an audio classification model
 
-
+![](media/CQT_Spectrogram.png)
