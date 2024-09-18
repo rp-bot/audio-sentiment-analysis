@@ -36,4 +36,4 @@
 
 
 ## Finding random papers
-- [Deep Learning Audio](https://arxiv.org/abs/2309.05855)
+- [Deep Learning Audio using CNNs](https://arxiv.org/abs/2309.05855)
