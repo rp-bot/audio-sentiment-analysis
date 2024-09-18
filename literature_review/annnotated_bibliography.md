@@ -33,3 +33,7 @@
 -   [Movie Trailer Audio](https://www.kaggle.com/datasets/watipaso/trailermelspec)
 -   [Horror Movie Scenes](https://www.kaggle.com/datasets/kindngng/horrormovie11)
 -   [FreeSound Datasets](https://labs.freesound.org/datasets/)
+
+
+## Finding random papers
+- [Deep Learning Audio](https://arxiv.org/abs/2309.05855)
