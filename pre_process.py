@@ -3,6 +3,45 @@ import librosa
 import matplotlib.pyplot as plt
 import numpy as np
 
+# Define the mappings for the data
+modality_map = {
+    '01': 'full-AV',
+    '02': 'video-only',
+    '03': 'audio-only'
+}
+
+vocal_channel_map = {
+    '01': 'speech',
+    '02': 'song'
+}
+
+emotion_map = {
+    '01': 'neutral',
+    '02': 'calm',
+    '03': 'happy',
+    '04': 'sad',
+    '05': 'angry',
+    '06': 'fearful',
+    '07': 'disgust',
+    '08': 'surprised'
+}
+
+intensity_map = {
+    '01': 'normal',
+    '02': 'strong'
+}
+
+statement_map = {
+    '01': 'Kids are talking by the door',
+    '02': 'Dogs are sitting by the door'
+}
+
+repetition_map = {
+    '01': '1st repetition',
+    '02': '2nd repetition'
+}
+
+
 # We have the dataset directory here
 DATASET_DIR = "P:\ML_datasets\RAVDESS_MUSIC"
 

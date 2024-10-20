@@ -34,6 +34,7 @@
 -   [Horror Movie Scenes](https://www.kaggle.com/datasets/kindngng/horrormovie11)
 -   [FreeSound Datasets](https://labs.freesound.org/datasets/)
 
-
 ## Finding random papers
-- [Deep Learning Audio using CNNs](https://arxiv.org/abs/2309.05855)
+
+-   [Deep Learning Audio using CNNs](https://arxiv.org/abs/2309.05855)
+-   [Emotify Dataset](http://www2.projects.science.uu.nl/memotion/emotifydata/)
