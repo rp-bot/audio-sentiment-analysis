@@ -8,6 +8,8 @@ librosa = "*"
 matplotlib = "*"
 numpy = "*"
 python-dotenv = "*"
+torch = "*"
+pandas = "*"
 
 [dev-packages]
 ipykernel = "*"
