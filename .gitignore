@@ -1,5 +1,6 @@
 dataset_paths.py
 /DATA
+/.vscode
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

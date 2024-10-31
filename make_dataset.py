@@ -2,6 +2,7 @@ import os
 import numpy as np
 import torch
 # from torch.utils.data import Dataset, DataLoader
+import soundfile as sf
 import librosa
 import pandas as pd
 from dataset_paths import *
@@ -110,6 +111,7 @@ def make_RAVDESS_pd(rav):
 def DataLoader(df, batch_size, ravdess=False, emotify=False):
     tensors = []
     max_chunk_length = 32000  # Maximum chunk length for 2 seconds
+    hop_len = 256
     if ravdess:
         for idx in range(len(df)):
             row = df.iloc[idx]
@@ -119,15 +121,12 @@ def DataLoader(df, batch_size, ravdess=False, emotify=False):
             # Load and preprocess audio
             audio, sr = librosa.load(path, sr=16000)
             audio, _ = librosa.effects.trim(audio, top_db=40)
-            C = np.abs(librosa.cqt(audio, sr=16000, hop_length=512))
-
+            C = np.abs(librosa.cqt(audio, sr=16000, hop_length=hop_len))
             # Convert emotion to integer
-            emotion_int = emotion_to_int[emotion]
+            # emotion_int = emotion_to_int[emotion]
 
             # Determine number of chunks if C is longer than 2 seconds (32000 samples)
-            chunk_length = sr * 2 // 512
-            print(C.shape)
-            # plot_spectogram(C, 16000)
+            chunk_length = sr * 2 // hop_len
             if C.shape[1] > chunk_length:
                 num_chunks = C.shape[1] // chunk_length
                 for i in range(num_chunks):
@@ -140,11 +139,8 @@ def DataLoader(df, batch_size, ravdess=False, emotify=False):
                         continue
 
                     chunk_tensor = torch.tensor(chunk, dtype=torch.float32)
-                    emotion_tensor = torch.tensor(
-                        [emotion_int], dtype=torch.float32).repeat(chunk_tensor.shape[1])
-                    combined_tensor = torch.cat(
-                        (chunk_tensor, emotion_tensor.unsqueeze(0)), dim=0)
-                    tensors.append(combined_tensor)
+
+                    tensors.append((chunk_tensor, emotion))
 
             if len(tensors) >= batch_size:
                 break
@@ -159,5 +155,7 @@ if __name__ == '__main__':
     # Example batch size of 4
     batch = DataLoader(
         df, batch_size=4, ravdess=True)
-
-    print(batch[0])
+    print(len(batch))
+    ex, la = batch[0]
+    print(ex)
+    print(la)
