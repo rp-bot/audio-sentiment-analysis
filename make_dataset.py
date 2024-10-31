@@ -1,10 +1,11 @@
 import os
+import numpy as np
 import torch
-from torch.utils.data import Dataset, DataLoader
+# from torch.utils.data import Dataset, DataLoader
 import librosa
 import pandas as pd
 from dataset_paths import *
-
+import matplotlib.pyplot as plt
 # Define the mappings for the data
 modality_map = {
     '01': 'full-AV',
@@ -28,6 +29,18 @@ emotion_map = {
     '08': 'surprised'
 }
 
+emotion_to_int = {
+    'neutral': 1,
+    'calm': 2,
+    'happy': 3,
+    'sad': 4,
+    'angry': 5,
+    'fearful': 6,
+    'disgust': 7,
+    'surprised': 8
+}
+
+
 intensity_map = {
     '01': 'normal',
     '02': 'strong'
@@ -42,6 +55,15 @@ repetition_map = {
     '01': '1st repetition',
     '02': '2nd repetition'
 }
+
+
+def plot_spectogram(spectogram_array, sample_rate):
+    fig, ax = plt.subplots()
+    img = librosa.display.specshow(librosa.amplitude_to_db(
+        spectogram_array, ref=np.max), y_axis='cqt_note', sr=sample_rate, ax=ax)
+    ax.set_title('CQT')
+    fig.colorbar(img, ax=ax, format="%+2.0f dB")
+    plt.show()
 
 
 def make_RAVDESS_pd(rav):
@@ -73,16 +95,6 @@ def make_RAVDESS_pd(rav):
             repetition = repetition_map[part[5]
                                         ] if repetition_map[part[5]] else 'unknown'
 
-            try:
-                if int(part[6]) % 2 == 0:
-                    actor = "female"
-                else:
-                    # path = (os.path.join(rav, actor, file))
-                    # emotion = 'male_'+emotion
-                    actor = "male"
-            except TypeError:
-                actor = "unknown"
-
             path = (os.path.join(rav, actor, file))
             actors.append([Emotion, path, modality, vocal_channel,
                           emotional_intensity, statement, repetition])
@@ -95,29 +107,57 @@ def make_RAVDESS_pd(rav):
     # print(RavFemales_df.head())
 
 
-class RAVDESSSongAudio(Dataset):
-    def __init__(self, file_paths, labels, sample_rate=16000, transform=None):
-        self.file_paths = file_paths
-        self.labels = labels
-        self.sample_rate = sample_rate
-        self.transform = transform
+def DataLoader(df, batch_size, ravdess=False, emotify=False):
+    tensors = []
+    max_chunk_length = 32000  # Maximum chunk length for 2 seconds
+    if ravdess:
+        for idx in range(len(df)):
+            row = df.iloc[idx]
+            path = row['path']
+            emotion = row['emotion']
 
-    def __len__(self):
-        return len(self.file_paths)
+            # Load and preprocess audio
+            audio, sr = librosa.load(path, sr=16000)
+            audio, _ = librosa.effects.trim(audio, top_db=40)
+            C = np.abs(librosa.cqt(audio, sr=16000, hop_length=512))
 
-    def __getitem__(self, idx):
-        # Load audio file
-        file_path = self.file_paths[idx]
-        audio, sr = librosa.load(file_path, sr=self.sample_rate)
+            # Convert emotion to integer
+            emotion_int = emotion_to_int[emotion]
 
-        # Apply transformation if specified
-        if self.transform:
-            audio = self.transform(audio)
+            # Determine number of chunks if C is longer than 2 seconds (32000 samples)
+            chunk_length = sr * 2 // 512
+            print(C.shape)
+            # plot_spectogram(C, 16000)
+            if C.shape[1] > chunk_length:
+                num_chunks = C.shape[1] // chunk_length
+                for i in range(num_chunks):
+                    start_idx = i * chunk_length
+                    end_idx = min((i + 1) * chunk_length, C.shape[1])
+                    chunk = C[:, start_idx:end_idx]
 
-        # Get the corresponding label
-        label = self.labels[idx]
-        return torch.tensor(audio, dtype=torch.float32), torch.tensor(label, dtype=torch.long)
+                    # Ignore the chunk if it is less than 2 seconds
+                    if chunk.shape[1] < chunk_length:
+                        continue
+
+                    chunk_tensor = torch.tensor(chunk, dtype=torch.float32)
+                    emotion_tensor = torch.tensor(
+                        [emotion_int], dtype=torch.float32).repeat(chunk_tensor.shape[1])
+                    combined_tensor = torch.cat(
+                        (chunk_tensor, emotion_tensor.unsqueeze(0)), dim=0)
+                    tensors.append(combined_tensor)
+
+            if len(tensors) >= batch_size:
+                break
+
+        return tensors
 
 
 if __name__ == '__main__':
-    make_RAVDESS_pd(RAVDESS_MUSIC_DIR)
+    # make_RAVDESS_pd(RAVDESS_MUSIC_DIR)
+    df = pd.read_csv(os.path.join(CURRENT_DIR, "DATA", "RAVDESS_MUSIC.csv"))
+
+    # Example batch size of 4
+    batch = DataLoader(
+        df, batch_size=4, ravdess=True)
+
+    print(batch[0])
