@@ -6,7 +6,7 @@ import soundfile as sf
 import librosa
 import pandas as pd
 from dataset_paths import *
-import matplotlib.pyplot as plt
+
 # Define the mappings for the data
 modality_map = {
     '01': 'full-AV',
@@ -41,7 +41,6 @@ emotion_to_int = {
     'surprised': 8
 }
 
-
 intensity_map = {
     '01': 'normal',
     '02': 'strong'
@@ -58,26 +57,21 @@ repetition_map = {
 }
 
 
-def plot_spectogram(spectogram_array, sample_rate):
-    fig, ax = plt.subplots()
-    img = librosa.display.specshow(librosa.amplitude_to_db(
-        spectogram_array, ref=np.max), y_axis='cqt_note', sr=sample_rate, ax=ax)
-    ax.set_title('CQT')
-    fig.colorbar(img, ax=ax, format="%+2.0f dB")
-    plt.show()
-
-
 def make_RAVDESS_pd(rav):
+    # Here we have an empty array of actors and their recordings
     actors = []
 
+    # We iterate through the directory which has all the actors
     for actor in os.listdir(rav):
 
+        # store another array which has all the files for each actor
         files = os.listdir(os.path.join(rav, actor))
 
         for file in files:
             part = file.split('.')[0]
             part = part.split("-")
 
+            # Destructure the file which is in a format like this "03-02-06-01-02-01-12.wav"
             modality = modality_map[part[0]
                                     ] if modality_map[part[0]] else 'unknown'
 
@@ -100,17 +94,15 @@ def make_RAVDESS_pd(rav):
             actors.append([Emotion, path, modality, vocal_channel,
                           emotional_intensity, statement, repetition])
 
+    # Save it to a csv file
     actors_df = pd.DataFrame(actors)
     actors_df.columns = ['emotion', 'path', 'modality',
                          'vocal_channel', 'emotional_intensity', 'statement', 'repetition']
     actors_df.to_csv(os.path.join(CURRENT_DIR, "DATA", "RAVDESS_MUSIC.csv"))
-    print('RAVDESS datasets')
-    # print(RavFemales_df.head())
 
 
 def DataLoader(df, batch_size, ravdess=False, emotify=False):
     tensors = []
-    max_chunk_length = 32000  # Maximum chunk length for 2 seconds
     hop_len = 256
     if ravdess:
         for idx in range(len(df)):
@@ -121,14 +113,22 @@ def DataLoader(df, batch_size, ravdess=False, emotify=False):
             # Load and preprocess audio
             audio, sr = librosa.load(path, sr=16000)
             audio, _ = librosa.effects.trim(audio, top_db=40)
+
+            # Perform CQT
             C = np.abs(librosa.cqt(audio, sr=16000, hop_length=hop_len))
+
             # Convert emotion to integer
             # emotion_int = emotion_to_int[emotion]
 
             # Determine number of chunks if C is longer than 2 seconds (32000 samples)
             chunk_length = sr * 2 // hop_len
+
+            # If C is longer than 2 seconds
             if C.shape[1] > chunk_length:
+
+                # see how many chunks we can get by dividing. // rounds
                 num_chunks = C.shape[1] // chunk_length
+
                 for i in range(num_chunks):
                     start_idx = i * chunk_length
                     end_idx = min((i + 1) * chunk_length, C.shape[1])
