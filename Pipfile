@@ -10,6 +10,7 @@ numpy = "*"
 python-dotenv = "*"
 torch = "*"
 pandas = "*"
+tqdm = "*"
 
 [dev-packages]
 ipykernel = "*"

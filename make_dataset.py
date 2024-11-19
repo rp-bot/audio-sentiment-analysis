@@ -6,7 +6,7 @@ import soundfile as sf
 import librosa
 import pandas as pd
 from dataset_paths import *
-
+from tqdm import tqdm
 # Define the mappings for the data
 modality_map = {
     '01': 'full-AV',
@@ -67,38 +67,51 @@ def make_RAVDESS_pd(rav):
         # store another array which has all the files for each actor
         files = os.listdir(os.path.join(rav, actor))
 
-        for file in files:
-            part = file.split('.')[0]
-            part = part.split("-")
+        for file in tqdm(files, desc=actor):
+            # part = file.split('.')[0]
+            # part = part.split("-")
 
-            # Destructure the file which is in a format like this "03-02-06-01-02-01-12.wav"
-            modality = modality_map[part[0]
-                                    ] if modality_map[part[0]] else 'unknown'
+            # # Destructure the file which is in a format like this "03-02-06-01-02-01-12.wav"
+            # modality = modality_map[part[0]
+            #                         ] if modality_map[part[0]] else 'unknown'
 
-            vocal_channel = vocal_channel_map[part[1]
-                                              ] if vocal_channel_map[part[1]] else 'unknown'
+            # vocal_channel = vocal_channel_map[part[1]
+            #                                   ] if vocal_channel_map[part[1]] else 'unknown'
 
-            Emotion = emotion_map[part[2]
-                                  ] if emotion_map[part[2]] else 'unknown'
+            # Emotion = emotion_map[part[2]
+            #                       ] if emotion_map[part[2]] else 'unknown'
 
-            emotional_intensity = intensity_map[part[3]
-                                                ] if intensity_map[part[3]] else 'unknown'
+            # emotional_intensity = intensity_map[part[3]
+            #                                     ] if intensity_map[part[3]] else 'unknown'
 
-            statement = statement_map[part[4]
-                                      ] if intensity_map[part[4]] else 'unknown'
+            # statement = statement_map[part[4]
+            #                           ] if intensity_map[part[4]] else 'unknown'
 
-            repetition = repetition_map[part[5]
-                                        ] if repetition_map[part[5]] else 'unknown'
+            # repetition = repetition_map[part[5]
+            #                             ] if repetition_map[part[5]] else 'unknown'
 
             path = (os.path.join(rav, actor, file))
-            actors.append([Emotion, path, modality, vocal_channel,
-                          emotional_intensity, statement, repetition])
+            audio, sr = librosa.load(path, sr=16000)
+            audio, _ = librosa.effects.trim(audio, top_db=40)
+
+            num_of_splits = audio.shape[0]//32000
+
+            for i in range(num_of_splits):
+                start_idx = i * 32000
+                end_idx = min((i + 1) * 32000, audio.shape[0])
+                os.makedirs(os.path.join(
+                    RAVDESS_MUSIC_PROCESSED, actor), exist_ok=True)
+                sf.write(os.path.join(RAVDESS_MUSIC_PROCESSED,
+                         actor, f"{i}_{file}"), audio[start_idx:end_idx], 16000)
+
+            # actors.append([Emotion, path, modality, vocal_channel,
+            #               emotional_intensity, statement, repetition])
 
     # Save it to a csv file
-    actors_df = pd.DataFrame(actors)
-    actors_df.columns = ['emotion', 'path', 'modality',
-                         'vocal_channel', 'emotional_intensity', 'statement', 'repetition']
-    actors_df.to_csv(os.path.join(CURRENT_DIR, "DATA", "RAVDESS_MUSIC.csv"))
+    # actors_df = pd.DataFrame(actors)
+    # actors_df.columns = ['emotion', 'path', 'modality',
+    #                      'vocal_channel', 'emotional_intensity', 'statement', 'repetition']
+    # actors_df.to_csv(os.path.join(CURRENT_DIR, "DATA", "RAVDESS_MUSIC.csv"))
 
 
 def DataLoader(df, batch_size, ravdess=False, emotify=False):
@@ -149,13 +162,11 @@ def DataLoader(df, batch_size, ravdess=False, emotify=False):
 
 
 if __name__ == '__main__':
-    # make_RAVDESS_pd(RAVDESS_MUSIC_DIR)
-    df = pd.read_csv(os.path.join(CURRENT_DIR, "DATA", "RAVDESS_MUSIC.csv"))
-
-    # Example batch size of 4
-    batch = DataLoader(
-        df, batch_size=4, ravdess=True)
-    print(len(batch))
-    ex, la = batch[0]
-    print(ex)
-    print(la)
+    make_RAVDESS_pd(RAVDESS_MUSIC_DIR)
+    # df = pd.read_csv(os.path.join(CURRENT_DIR, "DATA", "RAVDESS_MUSIC.csv"))
+    # print(df.loc[0])
+    # # Example batch size of 4
+    # batch = DataLoader(
+    #     df, batch_size=4, ravdess=True)
+    # print(len(batch))
+    # ex, la = batch[0]
