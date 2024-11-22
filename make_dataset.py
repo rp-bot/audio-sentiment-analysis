@@ -5,7 +5,7 @@ import torch
 import soundfile as sf
 import librosa
 import pandas as pd
-from dataset_paths import *
+from dataset_utils import *
 from tqdm import tqdm
 # Define the mappings for the data
 modality_map = {
@@ -57,7 +57,7 @@ repetition_map = {
 }
 
 
-def make_RAVDESS_pd(rav):
+def make_RAVDESS_pd(rav, proc_folder):
     # Here we have an empty array of actors and their recordings
     actors = []
 
@@ -93,6 +93,7 @@ def make_RAVDESS_pd(rav):
             path = (os.path.join(rav, actor, file))
             audio, sr = librosa.load(path, sr=16000)
             audio, _ = librosa.effects.trim(audio, top_db=40)
+            audio = librosa.to_mono(audio) 
 
             num_of_splits = audio.shape[0]//32000
 
@@ -100,8 +101,8 @@ def make_RAVDESS_pd(rav):
                 start_idx = i * 32000
                 end_idx = min((i + 1) * 32000, audio.shape[0])
                 os.makedirs(os.path.join(
-                    RAVDESS_MUSIC_PROCESSED, actor), exist_ok=True)
-                sf.write(os.path.join(RAVDESS_MUSIC_PROCESSED,
+                    proc_folder, actor), exist_ok=True)
+                sf.write(os.path.join(proc_folder,
                          actor, f"{i}_{file}"), audio[start_idx:end_idx], 16000)
 
             # actors.append([Emotion, path, modality, vocal_channel,
@@ -162,7 +163,7 @@ def DataLoader(df, batch_size, ravdess=False, emotify=False):
 
 
 if __name__ == '__main__':
-    make_RAVDESS_pd(RAVDESS_MUSIC_DIR)
+    make_RAVDESS_pd(RAVDESS_MUSIC_DIR, RAVDESS_MUSIC_PROCESSED)
     # df = pd.read_csv(os.path.join(CURRENT_DIR, "DATA", "RAVDESS_MUSIC.csv"))
     # print(df.loc[0])
     # # Example batch size of 4
