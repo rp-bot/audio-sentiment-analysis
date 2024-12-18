@@ -20,9 +20,9 @@ BATCH_SIZE = 16
 # DataLoader
 ravdess_dataset = RavdessDataset(RAVDESS_MUSIC_PROCESSED)
 data_loader = DataLoader(ravdess_dataset, BATCH_SIZE)
+
+
 # Model
-
-
 class CNN3(nn.Module):
     def __init__(self):
         pass
